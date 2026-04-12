@@ -1,4 +1,6 @@
 /team_finder/media/
+/docs/
+/.vs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
