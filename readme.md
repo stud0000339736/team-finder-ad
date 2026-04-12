@@ -5,7 +5,7 @@
 ## 1. Скопировать репозиторий
 
 ```bash
-git clone ...
+git clone https://github.com/stud0000339736/team-finder-ad.git
 ```
 
 ```bash
