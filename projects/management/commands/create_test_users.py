@@ -1,7 +1,9 @@
+import random
+
 from django.core.management.base import BaseCommand
+
 from projects.models import Project
 from users.models import User
-import random
 
 
 class Command(BaseCommand):

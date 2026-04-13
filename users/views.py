@@ -1,65 +1,62 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, update_session_auth_hash
-from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator
-from .forms import UserRegisterForm, UserLoginForm, UserEditForm
-from .models import User
+from django.contrib.auth.forms import PasswordChangeForm
+from django.shortcuts import get_object_or_404, redirect, render
+
+from core.constants import OBJ_PER_PAGE
+from core.service import paginate_queryset
+from users.forms import UserEditForm, UserLoginForm, UserRegisterForm
+from users.models import User
 
 
 def register(request):
     if request.user.is_authenticated:
         return redirect('projects:project_list')
 
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('users:login')
-    else:
-        form = UserRegisterForm()
+    form = UserRegisterForm(request.POST or None)
+    if form.is_valid():
+        form.save()
+        return redirect('users:login')
 
     context = {'form': form}
     return render(request, 'users/register.html', context)
 
 
-def login_2(request):
+def login_user(request):  # login импортирован из django.contrib.auth, он и 1 :) Но изменил название
     if request.user.is_authenticated:
         return redirect('projects:project_list')
 
-    if request.method == 'POST':
-        form = UserLoginForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            return redirect('projects:project_list')
-    else:
-        form = UserLoginForm()
+    form = UserLoginForm(request, data=request.POST or None)
+    if form.is_valid():
+        user = form.get_user()
+        login(request, user)
+        return redirect('projects:project_list')
 
     return render(request, 'users/login.html', {'form': form})
 
 
 @login_required
-def logout_2(request):
+def logout_user(request):  # тут также как и с login
     logout(request)
     return redirect('projects:project_list')
 
 
-def user_detail(request, pk):
-    user = get_object_or_404(User, pk=pk)
+def user_detail(request, user_id):
+    user = get_object_or_404(User, pk=user_id)
     context = {'user': user}
     return render(request, 'users/user-details.html', context)
 
 
 @login_required
 def edit_user(request):
-    if request.method == 'POST':
-        form = UserEditForm(request.POST, files=request.FILES, instance=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect('users:profile', pk=request.user.pk)
-    else:
-        form = UserEditForm(instance=request.user)
+    form = UserEditForm(
+        request.POST or None,
+        request.FILES or None,
+        instance=request.user
+    )
+    if form.is_valid():
+        form.save()
+        return redirect('users:profile', user_id=request.user.pk)
 
     context = {'form': form}
     return render(request, 'users/edit_profile.html', context)
@@ -67,14 +64,11 @@ def edit_user(request):
 
 @login_required
 def change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(user=request.user, data=request.POST)
-        if form.is_valid():
-            user = form.save()
-            update_session_auth_hash(request, user)
-            return redirect('users:profile', pk=request.user.pk)
-    else:
-        form = PasswordChangeForm(user=request.user)
+    form = PasswordChangeForm(user=request.user, data=request.POST or None)
+    if form.is_valid():
+        user = form.save()
+        update_session_auth_hash(request, user)
+        return redirect('users:profile', user_id=request.user.pk)
 
     return render(request, 'users/change_password.html', {'form': form})
 
@@ -114,9 +108,8 @@ def users_list(request):
             users = users.filter(skill_id=skill_id)
             active_skill = skill_id
 
-    paginator = Paginator(users, 12)
     page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = paginate_queryset(users, page_number, OBJ_PER_PAGE)
 
     context = {
         'participants': page_obj,

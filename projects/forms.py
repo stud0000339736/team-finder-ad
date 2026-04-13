@@ -1,5 +1,5 @@
 from django import forms
-import re
+
 from .models import Project
 
 
@@ -18,11 +18,3 @@ class ProjectForm(forms.ModelForm):
                 'placeholder': 'https://github.com/username/repo'
             }),
         }
-
-    def clean_github_url(self):
-        url = self.cleaned_data.get('github_url')
-        if url:
-            github_url_re = re.compile(r'^https://github.com/[\w-]+/[\w.-]+/?$')
-            if not github_url_re.match(url):
-                raise forms.ValidationError('Неправильная ссылка на GitHub')
-        return url

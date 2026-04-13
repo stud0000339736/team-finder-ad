@@ -1,14 +1,18 @@
 from django.db import models
+from django.urls import reverse
 
+from core.constants import (MAX_LENGTH_NAME, MAX_LENGTH_STATUS, STATUS_CLOSED,
+                            STATUS_OPEN)
+from core.validators import validate_github_project_url
 
 STATUS = [
-    ('open', 'Открыт'),
-    ('closed', 'Закрыт')
+    (STATUS_OPEN, 'Открыт'),
+    (STATUS_CLOSED, 'Закрыт')
 ]
 
 
 class Project(models.Model):
-    name = models.CharField('Название', max_length=200)
+    name = models.CharField('Название', max_length=MAX_LENGTH_NAME)
     description = models.TextField('Описание', blank=True)
     owner = models.ForeignKey(
         'users.User',
@@ -17,8 +21,17 @@ class Project(models.Model):
         verbose_name='Владелец'
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    github_url = models.URLField('Ссылка на GitHub', blank=True)
-    status = models.CharField('Статус', max_length=6, choices=STATUS, default='open')
+    github_url = models.URLField(
+        'Ссылка на GitHub',
+        blank=True,
+        validators=[validate_github_project_url]
+    )
+    status = models.CharField(
+        'Статус',
+        max_length=MAX_LENGTH_STATUS,
+        choices=STATUS,
+        default=STATUS_OPEN
+    )
     participants = models.ManyToManyField(
         'users.User',
         blank=True,
@@ -36,13 +49,17 @@ class Project(models.Model):
     class Meta:
         verbose_name = 'Проект'
         verbose_name_plural = 'Проекты'
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('projects:project_detail', kwargs={'project_id': self.pk})
+
 
 class Skill(models.Model):
-    name = models.CharField(max_length=124)
+    name = models.CharField(max_length=MAX_LENGTH_NAME)
 
     class Meta:
         verbose_name = 'Навык'
