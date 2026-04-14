@@ -2,6 +2,7 @@ import random
 
 from django.core.management.base import BaseCommand
 
+from core.constants import STATUS_OPEN
 from projects.models import Project
 from users.models import User
 
@@ -26,7 +27,7 @@ class Command(BaseCommand):
                         name=f'test_project_{i}_{j}',
                         description=f'test_description_{i}_{j}',
                         owner=user,
-                        status='open'
+                        status=STATUS_OPEN
                     )
 
                     project.participants.add(user)

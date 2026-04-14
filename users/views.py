@@ -3,7 +3,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.constants import OBJ_PER_PAGE
 from core.service import paginate_queryset
 from users.forms import UserEditForm, UserLoginForm, UserRegisterForm
 from users.models import User
@@ -22,7 +21,7 @@ def register(request):
     return render(request, 'users/register.html', context)
 
 
-def login_user(request):  # login импортирован из django.contrib.auth, он и 1 :) Но изменил название
+def login_user(request):
     if request.user.is_authenticated:
         return redirect('projects:project_list')
 
@@ -36,7 +35,7 @@ def login_user(request):  # login импортирован из django.contrib.a
 
 
 @login_required
-def logout_user(request):  # тут также как и с login
+def logout_user(request):
     logout(request)
     return redirect('projects:project_list')
 
@@ -108,8 +107,7 @@ def users_list(request):
             users = users.filter(skill_id=skill_id)
             active_skill = skill_id
 
-    page_number = request.GET.get('page')
-    page_obj = paginate_queryset(users, page_number, OBJ_PER_PAGE)
+    page_obj = paginate_queryset(request, users)
 
     context = {
         'participants': page_obj,

@@ -2,11 +2,10 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
-from core.constants import OBJ_PER_PAGE, STATUS_CLOSED, STATUS_OPEN
+from core.constants import STATUS_CLOSED, STATUS_OPEN
 from core.service import paginate_queryset
-
-from .forms import ProjectForm
-from .models import Project
+from projects.forms import ProjectForm
+from projects.models import Project
 
 
 def project_list(request):
@@ -16,8 +15,7 @@ def project_list(request):
         .prefetch_related('participants')
     )
 
-    page_number = request.GET.get('page')
-    page_obj = paginate_queryset(queryset, page_number, OBJ_PER_PAGE)
+    page_obj = paginate_queryset(request, queryset)
 
     context = {'page_obj': page_obj}
     return render(request, 'projects/project_list.html', context=context)

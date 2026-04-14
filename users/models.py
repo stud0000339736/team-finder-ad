@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 
 from core.constants import MAX_LENGTH_ABOUT, MAX_LENGTH_NAME, MAX_LENGTH_PHONE
-from core.service import user_avatar_path
+from core.service import generate_avatar, user_avatar_path
 from core.validators import validate_github_user_url, validate_phone
 from users.managers import UserManager
 
@@ -58,6 +58,13 @@ class User(AbstractUser):
 
     def get_absolute_url(self):
         return reverse('users:profile', kwargs={'user_id': self.pk})
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        if is_new and not self.avatar:
+            generate_avatar(self, self.name[0])
+            super().save(update_fields=['avatar'])
 
 
 class Skill(models.Model):
